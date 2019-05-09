@@ -42,9 +42,19 @@ $ python service.py
 2019-05-09 14:45:39,346 - micro - INFO - Serving on: '*:8080'
 ```
 
+Or, use the [omg-cli](https://github.com/microservices/omg-cli):
+
+```shell
+$ omg run uuid4 -a prefix='user-'
+…
+```
+
 ## Installation
 
 ```shell
 $ pip install omg-micro
+```
+
+**P.S.** This doesn't work yet. :)
 
 ✨ 🍰 ✨
