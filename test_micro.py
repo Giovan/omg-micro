@@ -1,6 +1,10 @@
 from uuid import uuid4
 import pytest
 
+# --------
+# Fixtures
+# --------
+
 
 @pytest.fixture
 def f():
@@ -22,8 +26,9 @@ def service(micro):
     return micro.Service(name='service')
 
 
-def test_assertion(f):
-    assert True
+# -----
+# Tests
+# -----
 
 
 def test_basic_service_registation(f, service):
