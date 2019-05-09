@@ -1,11 +1,10 @@
 import os
 
-
 import delegator
 import logme
 import yaml
 import waitress
-from flask import Flask
+from flask import Flask, jsonify, request, Response, make_response
 from docopt import docopt
 
 __all__ = ['Service']
@@ -57,7 +56,7 @@ class MicroserviceYML:
 
     def _render(self):
         data = yaml.safe_load(YAML_TEMPLATE)
-        for service in self.services:
+        for endpoint in self.endpoints:
             pass
 
         return data
@@ -108,7 +107,7 @@ class Microservice(MicroserviceOMG, MicroserviceYML, MicroserviceDockerfile):
     def __init__(self, name, root_path='.'):
         self.name = name
         self.root_path = os.path.abspath(root_path)
-        self.services = {}
+        self.endpoints = {}
 
         self.logger.debug(f'Initiating {self.name!r} service.')
 
@@ -133,11 +132,6 @@ class Microservice(MicroserviceOMG, MicroserviceYML, MicroserviceDockerfile):
         waitress.serve(app=self.flask, listen=listen, **kwargs)
         pass
 
-    @staticmethod
-    def _args_for_f(f):
-        # print(f.__code__.__defaults__)
-        return f.__annotations__
-
     def register(self, f, *, name: str = None, uri: str = None):
         # Infer the service name.
         name = name or f.__name__
@@ -147,12 +141,65 @@ class Microservice(MicroserviceOMG, MicroserviceYML, MicroserviceDockerfile):
         self.logger.debug(f"Registering '{self.name}{uri}'.")
 
         # Store the service, for later use.
-        self.services[name] = {
-            'name': name,
-            'uri': uri,
-            'f': f,
-            'args': self._args_for_f(f),
-        }
+        self.endpoints[name] = {'name': name, 'uri': uri, 'f': f}
+
+        self._register_endpoints()
+
+    def _register_endpoint(self, service):
+        f = service['f']
+        rule = service['uri']
+        endpoint = service['name']
+
+        def view_func(**kwargs):
+
+            # Check type annoytations of enpoint function,
+            # Flag query parameters as usable, if it appears to be applicable.
+
+            params = {}
+            json = request.get_json()
+
+            # Whitelist function arguments.
+            for arg in f.__annotations__:
+                if arg in request.args:
+                    params[arg] = request.args[arg]
+
+                if json:
+                    if arg in json:
+                        params[arg] = json[arg]
+
+            # Pass all query parameters as function arguments, if applicable.
+            self.logger.info(f'Calling {rule!r} with args: {params!r}.')
+
+            # Call the function.
+            try:
+                result = f(**params)
+            except TypeError:
+                result = make_response(
+                    f"Invalid parameters passed. Expected: {[v for v in f.__annotations__.keys()]}",
+                    500,
+                )
+                self.logger.warn(
+                    f'Calling {rule!r} with args: {params!r} failed!'
+                )
+
+            # Return the result immediately, if it is a Flask Response.
+            if isinstance(result, Response):
+                return result
+
+            # Return the result, relying on JSON, then falling back to bytes.
+            try:
+                return jsonify(result)
+            except ValueError:
+                return result
+
+        self.logger.debug(f'Registering Flask endpoint: {rule!r}')
+        self.flask.add_url_rule(
+            rule=rule, endpoint=endpoint, view_func=view_func
+        )
+
+    def _register_endpoints(self):
+        for endpoint in self.endpoints.values():
+            self._register_endpoint(endpoint)
 
 
 Service = Microservice

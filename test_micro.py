@@ -26,6 +26,12 @@ def service(micro):
     return micro.Service(name='service')
 
 
+@pytest.fixture
+def flask(f, service):
+    service.register(f)
+    return service._flask
+
+
 # -----
 # Tests
 # -----
