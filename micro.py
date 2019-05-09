@@ -11,7 +11,7 @@ __all__ = ['Service']
 
 DEFAULT_PORT = '8080'
 DEFAULT_ARG_TYPE = str
-DEFAULT_ENTRYPOINT = 'server.py:service'
+DEFAULT_ENTRYPOINT = 'service.py:service'
 PORT = os.environ.get('PORT', DEFAULT_PORT)
 YAML_TEMPLATE = """
 omg: 1
@@ -206,7 +206,7 @@ Service = Microservice
 
 
 def cli():
-    """Micro, the OMG service generator.
+    """Micro, the OMG service generator/runner.
 
     Usage:
         micro <entrypoint>
