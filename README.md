@@ -1,6 +1,6 @@
 # OMG: Micro Framework
 
-A micro-framework for the **[Open Microservices Guide](https://microservices.guide/)**, for suppportive code written in Python 3.6+.
+A micro-framework for the excellent **[Open Microservices Guide](https://microservices.guide/)**, for suppportive code written in Python 3.6+.
 
 **Note**: this is pre-release software, and is subject to improvement. Contributions are welcome!
 
@@ -17,7 +17,8 @@ service = micro.Service(name='uuid')
 
 @service.register('/uuid4', method='get')
 def gen_uuid4(prefix: str) -> str:
-     return f'{prefix}{uuid4().hex}'
+    """Generates a UUID, with a given prefix."""
+    return f'{prefix}{uuid4().hex}'
 
 # Alternative Syntax:
 # service.add(f=gen_uuid4)
@@ -26,10 +27,28 @@ if __name__ == '__main__':
     service.serve()
 ```
 
+If not available on disk, the required `Dockerfile` and `microservice.yml` files will automatically be generated, for your application:
 
+```shell
+$ cat microservice.yml
+actions:
+  uuid4:
+    help: Generates a UUID, with a given prefix.
+    http:
+      method: get
+      path: /uuid4
+      port: 8080
+    output:
+      type: string
+omg: 1
+```
 
-
-If not available on disk, the required `Dockerfile` and `microservice.yml` files will automatically be generated, for your application.
+```shell
+$ cat Dockerfile
+FROM kennethreitz/pipenv
+COPY . /app
+CMD ["python3", "service.py"]
+```
 
 Now, run your microservice!
 
