@@ -21,6 +21,7 @@ COPY . /app
 
 CMD ["python3", "server.py"]
 """.strip()
+DEFAULT_ARG_TYPE = str
 
 
 class MicroserviceDockerfile:
@@ -122,20 +123,26 @@ class Microservice(MicroserviceOMG, MicroserviceYML, MicroserviceDockerfile):
         waitress.serve(app=self.flask, bind=bind, **kwargs)
         pass
 
+    @staticmethod
+    def _args_for_f(f):
+        # print(f.__code__.__defaults__)
+        return f.__annotations__
+
     def register(self, f, *, name: str = None, uri: str = None):
-
         # Infer the service name.
-        if not name:
-            name = f.__name__
-
+        name = name or f.__name__
         # Infer the service URI. Note: Expects '/', like Flask.
-        if not uri:
-            uri = f'/{name}' if not uri else uri
+        uri = uri or f'/{name}'
 
         self.logger.debug(f"Registering '{self.name}{uri}'.")
 
         # Store the service, for later use.
-        self.services[name] = {'name': name, 'uri': uri, 'f': f}
+        self.services[name] = {
+            'name': name,
+            'uri': uri,
+            'f': f,
+            'args': self._args_for_f(f),
+        }
 
 
 Service = Microservice

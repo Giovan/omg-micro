@@ -8,7 +8,7 @@ import pytest
 
 @pytest.fixture
 def f():
-    def work(prefix=''):
+    def work(prefix: str = ''):
         return f'{prefix}{uuid4().hex}'
 
     return work
@@ -43,8 +43,15 @@ def test_named_service_registation(f, service):
     assert 'test' in service.services
 
 
-def test_cutom_uri_service_registation(f, service):
+def test_custom_uri_service_registation(f, service):
     service.register(f=f, name='test', uri='/not-test')
 
     assert 'test' in service.services
     assert service.services['test']['uri'] == '/not-test'
+
+
+def test_argument_detection(f, service):
+    service.register(f=f)
+
+    assert 'work' in service.services
+    assert 'prefix' in service.services['work']['args']
