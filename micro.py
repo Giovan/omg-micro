@@ -10,19 +10,20 @@ from docopt import docopt
 __all__ = ['Service']
 
 DEFAULT_PORT = '8080'
+DEFAULT_ARG_TYPE = str
+DEFAULT_ENTRYPOINT = 'server.py:service'
 PORT = os.environ.get('PORT', DEFAULT_PORT)
 YAML_TEMPLATE = """
 omg: 1
+actions:
 """.strip()
-DOCKERFILE_TEMPLATE = """
+DOCKERFILE_TEMPLATE = f"""
 FROM kennethreitz/pipenv
 
 COPY . /app
 
-CMD ["micro", "{entrypoint}", "serve"]
+CMD ["micro", "{DEFAULT_ENTRYPOINT}", "serve"]
 """.strip()
-DEFAULT_ARG_TYPE = str
-DEFAULT_ENTRYPOINT = 'server.py:service'
 
 
 class MicroserviceDockerfile:
@@ -56,9 +57,32 @@ class MicroserviceYML:
 
     def _render(self):
         data = yaml.safe_load(YAML_TEMPLATE)
-        for endpoint in self.endpoints:
-            pass
+        data['actions'] = {}
 
+        for endpoint in self.endpoints.values():
+            # data['actions'][endpoint['name']] = {}
+
+            data['actions'][endpoint['name']] = {
+                'help': endpoint['f'].__doc__,
+                'output': {'type': 'string'},
+                'http': {
+                    'path': endpoint['uri'],
+                    'method': 'get',
+                    'port': int(PORT),
+                },
+            }
+
+        # actions:
+        #   id:
+        #     help: |
+        #       Generate an awesome id. It is really cool.
+        #     http:
+        #       path: /
+        #       method: get
+        #       port: 8000
+        #     output:
+        #       type: string
+        # exit()
         return data
 
     def ensure_yaml(self, skip_if_exists=True):
