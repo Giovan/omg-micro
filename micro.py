@@ -6,13 +6,11 @@ import logme
 import yaml
 import waitress
 from flask import Flask, jsonify, request, Response, make_response
-from docopt import docopt
 
 __all__ = ['Service']
 
 DEFAULT_PORT = '8080'
 DEFAULT_ARG_TYPE = str
-DEFAULT_ENTRYPOINT = 'service.py:service'
 PORT = int(os.environ.get('PORT', DEFAULT_PORT))
 YAML_TEMPLATE = """
 omg: 1
@@ -23,7 +21,7 @@ FROM kennethreitz/pipenv
 
 COPY . /app
 
-CMD ["micro", "{DEFAULT_ENTRYPOINT}", "serve"]
+CMD ["python3", "service.py"]
 """.strip()
 
 
@@ -43,11 +41,7 @@ class MicroserviceDockerfile:
 
                 # Write the template Dockerfile to disk.
                 with open(self._dockerfile_path, 'w') as f:
-                    f.write(
-                        DOCKERFILE_TEMPLATE.format(
-                            entrypoint=DEFAULT_ENTRYPOINT
-                        )
-                    )
+                    f.write(DOCKERFILE_TEMPLATE)
 
 
 @logme.log
@@ -98,12 +92,12 @@ class Microservice(MicroserviceYML, MicroserviceDockerfile):
 
         self.flask = Flask(__name__)
 
-    def ensure(self):
+    def ensure(self, skip_if_exists=True):
         # Ensure the Dockerfile exists.
-        self.ensure_dockerfile()
+        self.ensure_dockerfile(skip_if_exists=skip_if_exists)
 
         # Ensure the YAML exists.
-        self.ensure_yaml()
+        self.ensure_yaml(skip_if_exists=skip_if_exists)
 
     def serve(self, **kwargs):
 
@@ -203,36 +197,3 @@ class Microservice(MicroserviceYML, MicroserviceDockerfile):
 
 
 Service = Microservice
-
-
-def cli():
-    """Micro, the OMG service generator/runner.
-
-    Usage:
-        micro <entrypoint>
-    """
-    args = docopt(cli.__doc__)
-    entrypoint = args['<entrypoint>']
-
-    # Default to :service.
-    if ':' not in entrypoint:
-        entrypoint = f'{entrypoint}:service'
-
-    entrypoint, entry_attr = entrypoint.split(':')
-
-    # Strip .py from entrypoint file name.
-    if entrypoint.endswith('.py'):
-        entrypoint = entrypoint[0 : -1 * len('.py')]
-
-    # Import the actual service.
-    service = getattr(__import__(entrypoint), entry_attr)
-
-    # Ensure the files exist.
-    service.ensure()
-
-    # Serve the HTTP service.
-    service.serve()
-
-
-if __name__ == '__main__':
-    cli()
