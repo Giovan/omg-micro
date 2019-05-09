@@ -12,10 +12,8 @@ $ cat service.py
 ```python
 import micro
 
-
 def test_function(test: str):
     return {'test': test}
-
 
 service = micro.Service(name='service')
 service.register(f=test_function)
