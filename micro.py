@@ -72,17 +72,6 @@ class MicroserviceYML:
                 },
             }
 
-        # actions:
-        #   id:
-        #     help: |
-        #       Generate an awesome id. It is really cool.
-        #     http:
-        #       path: /
-        #       method: get
-        #       port: 8000
-        #     output:
-        #       type: string
-        # exit()
         return data
 
     def ensure_yaml(self, skip_if_exists=True):
@@ -95,8 +84,6 @@ class MicroserviceYML:
                 self.logger.info(f'Writing {self._yaml_path!r} to disk.')
                 with open(self._yaml_path, 'w') as f:
                     f.write(yaml.safe_dump(self._render()))
-
-        data = self._render()
 
 
 @logme.log
