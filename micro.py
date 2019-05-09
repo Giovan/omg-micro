@@ -10,8 +10,8 @@ from docopt import docopt
 
 __all__ = ['Service']
 
-
-PORT = os.environ.get('PORT')
+DEFAULT_PORT = '8080'
+PORT = os.environ.get('PORT', DEFAULT_PORT)
 YAML_TEMPLATE = """
 omg: 1
 """.strip()
@@ -20,9 +20,10 @@ FROM kennethreitz/pipenv
 
 COPY . /app
 
-CMD ["python3", "server.py"]
+CMD ["micro", "{entrypoint}", "serve"]
 """.strip()
 DEFAULT_ARG_TYPE = str
+DEFAULT_ENTRYPOINT = 'server.py:service'
 
 
 class MicroserviceDockerfile:
@@ -41,7 +42,11 @@ class MicroserviceDockerfile:
 
                 # Write the template Dockerfile to disk.
                 with open(self._dockerfile_path, 'w') as f:
-                    f.write(DOCKERFILE_TEMPLATE)
+                    f.write(
+                        DOCKERFILE_TEMPLATE.format(
+                            entrypoint=DEFAULT_ENTRYPOINT
+                        )
+                    )
 
 
 @logme.log
@@ -117,14 +122,15 @@ class Microservice(MicroserviceOMG, MicroserviceYML, MicroserviceDockerfile):
         self.ensure_yaml()
 
     def serve(self, **kwargs):
-        self.logger.info(f'Serving on port: f{PORT}')
 
         # Bind to PORT, automatically.
-        bind = f'*:{PORT}'
-        if 'bind' in kwargs:
-            bind = kwargs.pop('bind')
+        listen = f'*:{PORT}'
+        if 'listen' in kwargs:
+            listen = kwargs.pop('listen')
 
-        waitress.serve(app=self.flask, bind=bind, **kwargs)
+        self.logger.info(f'Serving on: {listen!r}')
+
+        waitress.serve(app=self.flask, listen=listen, **kwargs)
         pass
 
     @staticmethod
@@ -174,7 +180,11 @@ def cli():
     # Import the actual service.
     service = getattr(__import__(entrypoint), entry_attr)
 
+    # Ensure the files exist.
     service.ensure()
+
+    # Serve the HTTP service.
+    service.serve()
 
 
 if __name__ == '__main__':
