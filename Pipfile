@@ -10,6 +10,8 @@ flake8 = "*"
 [packages]
 delegator-py = "*"
 pyyaml = "*"
+flask = "*"
+waitress = "*"
 
 [requires]
 python_version = "3.7"

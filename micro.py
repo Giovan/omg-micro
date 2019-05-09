@@ -2,19 +2,23 @@ import os
 
 import delegator
 import yaml
+import waitress
+from flask import Flask
 
 
-YML_TEMPLATE = """
+YAML_TEMPLATE = """
 omg: 1
 """.strip()
 
 
-class Microservice:
+class Service:
     def __init__(self, root_path='.'):
         self.root_path = os.path.abspath(root_path)
+        self.flask = Flask()
+        self._services = []
 
     def _generate_yaml(self):
-        data = yaml.safe_loads(YML_TEMPLATE)
+        data = yaml.safe_loads(YAML_TEMPLATE)
         return data
 
     @staticmethod
@@ -31,14 +35,24 @@ class Microservice:
         return c.ok
 
     def run(self, command, **args):
-        self.ensure_yml()
-        args = self._format_args(**args)
         pass
 
+    def serve(self, **kwargs):
+        waitress.serve(app=self.flask, **kwargs)
 
-omg = Microservice()
+    def register(self, name=None, path=None):
+        def callback(func, **kwargs):
+            pass
+
+        return callback
+        # self._services.append(f)
+        # print(kwargs)
+        # return
 
 
-@omg.register(name='query', path="/query")
-def query(uri: str) -> str:
+service = Service()
+
+
+@service.register(name='query', path='/query')
+def query(uri):
     return uri
