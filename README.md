@@ -19,9 +19,15 @@ service = micro.Service(name='uuid')
 def gen_uuid4(prefix: str) -> str:
      return f'{prefix}{uuid4().hex}'
 
+# Alternative Syntax:
+
+
 if __name__ == '__main__':
     service.serve()
 ```
+
+
+
 
 If not available on disk, the required `Dockerfile` and `microservice.yml` files will automatically be generated, for your application.
 
