@@ -1,11 +1,12 @@
 import os
 
+
 import delegator
 import logme
 import yaml
-
 import waitress
 from flask import Flask
+from docopt import docopt
 
 __all__ = ['Service']
 
@@ -88,11 +89,7 @@ class MicroserviceOMG:
         return c.ok
 
     def run(self, command, **args):
-        # Ensure the Dockerfile exists.
-        self.ensure_dockerfile()
-
-        # Ensure the YAML exists.
-        self.ensure_yaml()
+        self.ensure()
 
         self.logger.info(f"Running '{self.name}/{command}' endpoint.")
         # Prepare CLI arguments.
@@ -111,6 +108,13 @@ class Microservice(MicroserviceOMG, MicroserviceYML, MicroserviceDockerfile):
         self.logger.debug(f'Initiating {self.name!r} service.')
 
         self.flask = Flask(__name__)
+
+    def ensure(self):
+        # Ensure the Dockerfile exists.
+        self.ensure_dockerfile()
+
+        # Ensure the YAML exists.
+        self.ensure_yaml()
 
     def serve(self, **kwargs):
         self.logger.info(f'Serving on port: f{PORT}')
@@ -146,3 +150,32 @@ class Microservice(MicroserviceOMG, MicroserviceYML, MicroserviceDockerfile):
 
 
 Service = Microservice
+
+
+def cli():
+    """Micro, the OMG service generator.
+
+    Usage:
+        micro <entrypoint>
+    """
+    args = docopt(cli.__doc__)
+    entrypoint = args['<entrypoint>']
+
+    # Default to :service.
+    if ':' not in entrypoint:
+        entrypoint = f'{entrypoint}:service'
+
+    entrypoint, entry_attr = entrypoint.split(':')
+
+    # Strip .py from entrypoint file name.
+    if entrypoint.endswith('.py'):
+        entrypoint = entrypoint[0 : -1 * len('.py')]
+
+    # Import the actual service.
+    service = getattr(__import__(entrypoint), entry_attr)
+
+    service.ensure()
+
+
+if __name__ == '__main__':
+    cli()
