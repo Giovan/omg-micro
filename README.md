@@ -11,19 +11,24 @@ $ cat service.py
 ```
 ```python
 import micro
+from uuid import uuid4
 
-def test_function(test: str):
-    return {'test': test}
+service = micro.Service(name='uuid')
 
-service = micro.Service(name='service')
-service.register(f=test_function)
+@service.register('/uuid4', method='get')
+def gen_uuid4(prefix: str) -> str:
+     return f'{prefix}{uuid4().hex}'
+
+if __name__ == '__main__':
+    service.serve()
 ```
 
 If not available on disk, the required `Dockerfile` and `microservice.yml` files will automatically be generated, for your application.
 
-Running your microservice:
+Now, run your microservice!
+
 ```shell
-$ micro service.py
+$ python service.py
 2019-05-09 14:45:39,342 - micro - DEBUG - Initiating 'uuid' service.
 2019-05-09 14:45:39,344 - micro - DEBUG - Registering Flask endpoint: '/uuid4'
 2019-05-09 14:45:39,344 - micro - DEBUG - Dockerfile './Dockerfile' already exists!

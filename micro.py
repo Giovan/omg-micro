@@ -1,4 +1,5 @@
 import os
+import functools
 
 import delegator
 import logme
@@ -66,8 +67,8 @@ class MicroserviceYML:
                 'help': endpoint['f'].__doc__,
                 'output': {'type': 'string'},
                 'http': {
-                    'path': endpoint['uri'],
-                    'method': 'get',
+                    'path': endpoint['path'],
+                    'method': endpoint['method'],
                     'port': PORT,
                 },
             }
@@ -116,20 +117,34 @@ class Microservice(MicroserviceYML, MicroserviceDockerfile):
         waitress.serve(app=self.flask, listen=listen, **kwargs)
         pass
 
-    def register(self, f, *, name: str = None, uri: str = None):
+    def add(
+        self, f, *, name: str = None, path: str = None, method: str = 'get'
+    ):
         # Infer the service name.
         name = name or f.__name__
         # Infer the service URI. Note: Expects '/', like Flask.
-        uri = uri or f'/{name}'
+        path = path or f'/{name}'
 
         # Store the service, for later use.
-        self.endpoints[name] = {'name': name, 'uri': uri, 'f': f}
+        self.endpoints[name] = {
+            'name': name,
+            'path': path,
+            'f': f,
+            'method': method,
+        }
 
         self._register_endpoints()
 
+    def register(self, path, **kwargs):
+        def decorator(f):
+            self.add(f=f, path=path, **kwargs)
+            return f
+
+        return decorator
+
     def _register_endpoint(self, service):
         f = service['f']
-        rule = service['uri']
+        rule = service['path']
         endpoint = service['name']
 
         def view_func(**kwargs):
