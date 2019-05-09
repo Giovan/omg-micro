@@ -135,8 +135,6 @@ class Microservice(MicroserviceYML, MicroserviceDockerfile):
         # Infer the service URI. Note: Expects '/', like Flask.
         uri = uri or f'/{name}'
 
-        self.logger.debug(f"Registering '{self.name}{uri}'.")
-
         # Store the service, for later use.
         self.endpoints[name] = {'name': name, 'uri': uri, 'f': f}
 
