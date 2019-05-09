@@ -1,6 +1,7 @@
 import os
 
 import delegator
+import logme
 import yaml
 
 import waitress
@@ -15,6 +16,7 @@ omg: 1
 """.strip()
 
 
+@logme.log
 class MSYML:
     def _generate_yaml(self):
         data = yaml.safe_loads(YAML_TEMPLATE)
@@ -24,6 +26,7 @@ class MSYML:
         pass
 
 
+@logme.log
 class OMGCLI:
     @staticmethod
     def _format_args(**args):
@@ -39,14 +42,26 @@ class OMGCLI:
         pass
 
 
+@logme.log
 class Service(MSYML, OMGCLI):
-    def __init__(self, root_path='.'):
+    def __init__(self, name, root_path='.'):
+        self.name = name
         self.root_path = os.path.abspath(root_path)
+
+        self.logger.info(f'Initiating {self.name!r} service.')
+
         self.flask = Flask(__name__)
         self._services = []
 
     def serve(self, **kwargs):
-        waitress.serve(app=self.flask, **kwargs)
+        self.logger.info(f'Serving on port: f{PORT}')
+
+        # Bind to PORT, automatically.
+        bind = f'*:{PORT}'
+        if 'bind' in kwargs:
+            bind = kwargs.pop('bind')
+
+        waitress.serve(app=self.flask, bind=bind, **kwargs)
         pass
 
     def register(self, name=None, path=None):
@@ -58,7 +73,7 @@ class Service(MSYML, OMGCLI):
         return callback
 
 
-service = Service()
+service = Service(name='service')
 
 
 @service.register(name='query', path='/query')
