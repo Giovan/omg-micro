@@ -20,7 +20,7 @@ def gen_uuid4(prefix: str) -> str:
      return f'{prefix}{uuid4().hex}'
 
 # Alternative Syntax:
-
+# service.add(f=gen_uuid4)
 
 if __name__ == '__main__':
     service.serve()
