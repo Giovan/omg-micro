@@ -40,24 +40,24 @@ def flask(f, service):
 def test_basic_service_registation(f, service):
     service.register(f=f)
 
-    assert 'work' in service.services
+    assert 'work' in service.endpoints
 
 
 def test_named_service_registation(f, service):
     service.register(f=f, name='test')
 
-    assert 'test' in service.services
+    assert 'test' in service.endpoints
 
 
 def test_custom_uri_service_registation(f, service):
     service.register(f=f, name='test', uri='/not-test')
 
-    assert 'test' in service.services
-    assert service.services['test']['uri'] == '/not-test'
+    assert 'test' in service.endpoints
+    assert service.endpoints['test']['uri'] == '/not-test'
 
 
 def test_argument_detection(f, service):
     service.register(f=f)
 
-    assert 'work' in service.services
-    assert 'prefix' in service.services['work']['args']
+    assert 'work' in service.endpoints
+    assert 'prefix' in service.endpoints['work']['f'].__annotations__
