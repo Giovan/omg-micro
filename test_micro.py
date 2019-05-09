@@ -61,3 +61,14 @@ def test_argument_detection(f, service):
 
     assert 'work' in service.endpoints
     assert 'prefix' in service.endpoints['work']['f'].__annotations__
+
+
+def test_yaml_generation(f, service):
+    service.register(f=f, name='hi', uri='/bye')
+
+    data = service._render()
+    assert 'omg' in data
+    assert 'actions' in data
+
+    assert data['actions']['hi']['http']['path'] == '/bye'
+    assert data['actions']['hi']['http']['method'] == '/get'
