@@ -1,3 +1,5 @@
+import os
+
 import delegator
 import yaml
 
@@ -8,8 +10,8 @@ omg: 1
 
 
 class Microservice:
-    def __init__(self):
-        pass
+    def __init__(self, root_path='.'):
+        self.root_path = os.path.abspath(root_path)
 
     def _generate_yaml(self):
         data = yaml.safe_loads(YML_TEMPLATE)
@@ -25,7 +27,7 @@ class Microservice:
 
     def build(self):
         self.ensure_yml()
-        c = delegator.run("omg build")
+        c = delegator.run('omg build')
         return c.ok
 
     def run(self, command, **args):
