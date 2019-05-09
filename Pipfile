@@ -12,6 +12,7 @@ delegator-py = "*"
 pyyaml = "*"
 flask = "*"
 waitress = "*"
+logme = "*"
 
 [requires]
 python_version = "3.7"
