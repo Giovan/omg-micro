@@ -29,7 +29,7 @@ CMD ["micro", "{DEFAULT_ENTRYPOINT}", "serve"]
 class MicroserviceDockerfile:
     @property
     def _dockerfile_path(self):
-        return f'./Dockerfile'
+        return './Dockerfile'
 
     def ensure_dockerfile(self, skip_if_exists=True):
         if skip_if_exists:
