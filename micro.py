@@ -76,34 +76,7 @@ class MicroserviceYML:
 
 
 @logme.log
-class MicroserviceOMG:
-    @staticmethod
-    def _format_args(**args):
-        args = [f'{k}={v}' for (k, v) in args.items()]
-        return '-a '.join(args)
-
-    def build(self):
-        # Ensure the Dockerfile exists.
-        self.ensure_dockerfile()
-
-        # Ensure the YAML exists.
-        self.ensure_yaml()
-
-        c = delegator.run('omg build')
-        return c.ok
-
-    def run(self, command, **args):
-        self.ensure()
-
-        self.logger.info(f"Running '{self.name}/{command}' endpoint.")
-        # Prepare CLI arguments.
-        args = self._format_args(**args)
-        c = delegator.run(f'omg run {args}')
-        return c.out
-
-
-@logme.log
-class Microservice(MicroserviceOMG, MicroserviceYML, MicroserviceDockerfile):
+class Microservice(MicroserviceYML, MicroserviceDockerfile):
     def __init__(self, name, root_path='.'):
         self.name = name
         self.root_path = os.path.abspath(root_path)
@@ -167,6 +140,9 @@ class Microservice(MicroserviceOMG, MicroserviceYML, MicroserviceDockerfile):
                     if arg in json:
                         params[arg] = json[arg]
 
+                # TODO:; grab values from HTTP Headers.
+                # TODO:  gab balues from multipart upload.
+
             # Pass all query parameters as function arguments, if applicable.
             self.logger.info(f'Calling {rule!r} with args: {params!r}.')
 
@@ -174,9 +150,9 @@ class Microservice(MicroserviceOMG, MicroserviceYML, MicroserviceDockerfile):
             try:
                 result = f(**params)
             except TypeError:
+                keys = repr([v for v in f.__annotations__.keys()])
                 result = make_response(
-                    f"Invalid parameters passed. Expected: {[v for v in f.__annotations__.keys()]}",
-                    500,
+                    f"Invalid parameters passed. Expected: {keys}", 412
                 )
                 self.logger.warn(
                     f'Calling {rule!r} with args: {params!r} failed!'
