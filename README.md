@@ -33,4 +33,9 @@ $ micro service.py
 2019-05-09 14:45:39,346 - micro - INFO - Serving on: '*:8080'
 ```
 
+## Installation
+
+```shell
+$ pip install omg-micro
+
 ✨ 🍰 ✨
